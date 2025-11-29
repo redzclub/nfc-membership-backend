@@ -1,0 +1,35 @@
+{
+  "name": "nfc-check-system-backend",
+  "version": "1.0.0",
+  "description": "A modular, secure, and scalable check in system with node.js, express.js, and PostgreSQL",
+  "license": "ISC",
+  "author": "tanvir-ahmed",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.0.1",
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "postgres": "^3.4.7",
+    "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.7",
+    "nodemon": "^3.1.11"
+  }
+}
