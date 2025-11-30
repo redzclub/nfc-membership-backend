@@ -1,38 +1,42 @@
 const express = require("express");
 const router = express.Router();
-const { db, tables } = require("../db");
+const { prisma } = require("../lib/prisma"); // adjust if needed
 const { logLimiter } = require("../middleware/rateLimiter");
-const { eq } = require("drizzle-orm");
 
 router.post("/", logLimiter, async (req, res) => {
   const { token, action, staff_name } = req.body;
-  if (!token || !action)
+
+  if (!token || !action) {
     return res.status(400).json({ error: "Missing token or action" });
-  if (!["admit", "deny"].includes(action))
+  }
+
+  if (!["admit", "deny"].includes(action)) {
     return res.status(400).json({ error: "Invalid action" });
+  }
 
   try {
-    const rows = await db
-      .select()
-      .from(tables.members)
-      .where(eq(tables.members.token, token))
-      .limit(1);
-    const member = rows && rows[0];
-    if (!member) return res.status(404).json({ error: "Member not found" });
+    // Find member by unique token
+    const member = await prisma.member.findUnique({
+      where: { token },
+    });
 
-    const inserted = await db
-      .insert(tables.logs)
-      .values({
+    if (!member) {
+      return res.status(4).json({ error: "Member not found" });
+    }
+
+    // Create log entry
+    const log = await prisma.log.create({
+      data: {
         member_id: member.id,
         action,
         staff_name: staff_name || null,
         ip: req.ip,
-      })
-      .returning();
+      },
+    });
 
-    res.json({ success: true, id: inserted[0].id });
+    res.json({ success: true, id: log.id });
   } catch (err) {
-    console.error("log error", err);
+    console.error("Log error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

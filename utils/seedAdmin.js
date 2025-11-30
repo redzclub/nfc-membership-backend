@@ -1,7 +1,6 @@
 require("dotenv").config();
 const bcrypt = require("bcrypt");
-const { db, tables } = require("../db");
-const { eq } = require("drizzle-orm");
+const { prisma } = require("../lib/prisma");
 
 /**
  * Seeds or updates the admin account
@@ -10,26 +9,26 @@ async function seedAdmin() {
   try {
     const email = process.env.ADMIN_EMAIL || "admin@example.com";
     const password = process.env.ADMIN_PASSWORD || "pw123456";
-    const hashed = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const found = await db
-      .select()
-      .from(tables.admins)
-      .where(eq(tables.admins.email, email))
-      .limit(1);
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { email },
+    });
 
-    if (found && found.length > 0) {
-      await db
-        .update(tables.admins)
-        .set({ password: hashed })
-        .where(eq(tables.admins.email, email));
-      // console.log("Admin updated:", email);
+    if (existingAdmin) {
+      // Update password if admin already exists
+      await prisma.admin.update({
+        where: { email },
+        data: { password: hashedPassword },
+      });
     } else {
-      await db.insert(tables.admins).values({ email, password: hashed });
-      // console.log("Admin created:", email);
+      // Create new admin
+      await prisma.admin.create({
+        data: { email, password: hashedPassword },
+      });
     }
   } catch (err) {
-    console.error("seed admin error:", err);
+    console.error("Seed admin error:", err);
   }
 }
 

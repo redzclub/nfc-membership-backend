@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/23834217/README.md)
 # **NFC Check – Backend**
 
 Backend API built with **Node.js**, **Express.js**, **Drizzle ORM**, and **PostgreSQL**.

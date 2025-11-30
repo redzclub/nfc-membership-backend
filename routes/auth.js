@@ -1,36 +1,43 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { db, tables } = require("../db");
-const { eq } = require("drizzle-orm");
-require("dotenv").config();
+const { prisma } = require("../lib/prisma");
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password)
+
+  if (!email || !password) {
     return res.status(400).json({ error: "Missing email or password" });
+  }
 
   try {
-    const rows = await db
-      .select()
-      .from(tables.admins)
-      .where(eq(tables.admins.email, email))
-      .limit(1);
-    const admin = rows && rows[0];
-    if (!admin) return res.status(401).json({ error: "Invalid credentials" });
+    // Find admin by email
+    const admin = await prisma.admin.findUnique({
+      where: { email },
+    });
 
-    const ok = await bcrypt.compare(password, admin.password);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    if (!admin) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
+    // Compare password
+    const isValidPassword = await bcrypt.compare(password, admin.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Generate JWT
     const token = jwt.sign(
       { id: admin.id, email: admin.email },
       process.env.JWT_SECRET,
-      { expiresIn: "12h" }
+      { expiresIn: "30d" }
     );
+
     res.json({ token, email: admin.email });
   } catch (err) {
-    console.error("auth error", err);
+    console.error("Auth error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client" 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Status enum
+enum Status {
+  active
+  expired
+  banned
+}
+
+// Members table
+model Member {
+  id         String    @id @default(uuid())
+  token      String    @unique
+  full_name  String
+  photo_url  String
+  status     Status
+  expires_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+
+  logs Log[] // relation with logs
+}
+
+// Logs table
+model Log {
+  id         String   @id @default(uuid())
+  member_id  String
+  action     String
+  staff_name String?
+  ip         String?
+  created_at DateTime @default(now())
+
+  member Member @relation(fields: [member_id], references: [id])
+}
+
+// Admins table
+model Admin {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+}
